@@ -1,0 +1,4 @@
+Checking dataset paths:
+Training Path: D:\ACADEMICS\THESIS\Datasets\final\01_ff40_unaltered\train
+Validation Path: D:\ACADEMICS\THESIS\Datasets\final\01_ff40_unaltered\val
+train.py  --dataroot  D:\ACADEMICS\THESIS\Datasets\final\01_ff40_unaltered  --batch_size  32  --lr  0.001  --niter  50

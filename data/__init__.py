@@ -15,32 +15,53 @@ def get_dataset(opt):
 '''
 
 import os
+# def get_dataset(opt):
+#     # classes = os.listdir(opt.dataroot) if len(opt.classes) == 0 else opt.classes
+#     # if '0_real' not in classes or '1_fake' not in classes:
+#     #     dset_lst = []
+#     #     for cls in classes:
+#     #         root = opt.dataroot + '/' + cls
+#     #         dset = dataset_folder(opt, root)
+#     #         dset_lst.append(dset)
+#     #     return torch.utils.data.ConcatDataset(dset_lst)
+#     # return dataset_folder(opt, opt.dataroot)
+#     """
+#         Loads dataset with 'real' and 'fake' subdirectories.
+#         """
+#     classes = ['real', 'fake']
+#     dset_lst = []
+#
+#     for cls in classes:
+#         root = os.path.join(opt.dataroot, cls)  # Ensure correct path
+#         if os.path.exists(root):  # Ensure the directory exists
+#             dset = dataset_folder(opt, root)
+#             dset_lst.append(dset)
+#
+#     if not dset_lst:
+#         raise ValueError(f"No valid dataset found in {opt.dataroot}")
+#
+#     return ConcatDataset(dset_lst)
+
 def get_dataset(opt):
-    # classes = os.listdir(opt.dataroot) if len(opt.classes) == 0 else opt.classes
-    # if '0_real' not in classes or '1_fake' not in classes:
-    #     dset_lst = []
-    #     for cls in classes:
-    #         root = opt.dataroot + '/' + cls
-    #         dset = dataset_folder(opt, root)
-    #         dset_lst.append(dset)
-    #     return torch.utils.data.ConcatDataset(dset_lst)
-    # return dataset_folder(opt, opt.dataroot)
     """
-        Loads dataset with 'real' and 'fake' subdirectories.
-        """
-    classes = ['real', 'fake']
-    dset_lst = []
+    Loads dataset from the correct split (train, val, or test).
+    """
+    dataset_root = opt.dataroot  # Use exactly what is passed
 
-    for cls in classes:
-        root = os.path.join(opt.dataroot, cls)  # Ensure correct path
-        if os.path.exists(root):  # Ensure the directory exists
-            dset = dataset_folder(opt, root)
-            dset_lst.append(dset)
+    if not os.path.exists(dataset_root):
+        raise FileNotFoundError(f"Dataset folder does not exist: {dataset_root}")
 
-    if not dset_lst:
-        raise ValueError(f"No valid dataset found in {opt.dataroot}")
+    real_path = os.path.join(dataset_root, 'real')
+    fake_path = os.path.join(dataset_root, 'fake')
 
-    return ConcatDataset(dset_lst)
+    print(f"Final dataset root: {dataset_root}")
+    print(f"init:Checking if '{real_path}' exists: {os.path.exists(real_path)}")
+    print(f"init:Checking if '{fake_path}' exists: {os.path.exists(fake_path)}")
+
+    if not os.path.exists(real_path) or not os.path.exists(fake_path):
+        raise FileNotFoundError(f"Expected 'real/' and 'fake/' inside {dataset_root}, but they are missing!")
+
+    return dataset_folder(opt, dataset_root)  # Pass only the dataset root, not subfolders
 
 def get_bal_sampler(dataset):
     targets = []

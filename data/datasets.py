@@ -1,3 +1,5 @@
+import os
+
 import cv2
 import numpy as np
 import torchvision.datasets as datasets
@@ -13,14 +15,72 @@ from torchvision.transforms import InterpolationMode
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 def dataset_folder(opt, root):
-    if opt.mode == 'binary':
-        return binary_dataset(opt, root)
-    if opt.mode == 'filename':
-        return FileNameDataset(opt, root)
-    raise ValueError('opt.mode needs to be binary or filename.')
+    # if opt.mode == 'binary':
+    #     return binary_dataset(opt, root)
+    # if opt.mode == 'filename':
+    #     return FileNameDataset(opt, root)
+    # raise ValueError('opt.mode needs to be binary or filename.')
+    """
+       Ensures dataset is loaded correctly with 'real' and 'fake' subdirectories.
+       """
+    print(f"Checking dataset at: {root}")
+    if not os.path.exists(root):
+        raise FileNotFoundError(f"Dataset folder does not exist: {root}")
+
+    real_path = os.path.join(root, 'real')
+    fake_path = os.path.join(root, 'fake')
+
+    print(f"datasets:Checking if '{real_path}' exists:", os.path.exists(real_path))
+    print(f"datasets:Checking if '{fake_path}' exists:", os.path.exists(fake_path))
+
+    if not os.path.exists(real_path) or not os.path.exists(fake_path):
+        raise FileNotFoundError(f"Expected 'real/' and 'fake/' inside {root}, but they are missing!")
+
+    # Check if folders contain images
+    real_files = os.listdir(real_path)
+    fake_files = os.listdir(fake_path)
+
+    print(f"Files in {real_path}: {real_files[:5]} ... ({len(real_files)} total)")
+    print(f"Files in {fake_path}: {fake_files[:5]} ... ({len(fake_files)} total)")
+
+    if len(real_files) == 0 or len(fake_files) == 0:
+        raise ValueError(f"One of the dataset folders ('real/' or 'fake/') is empty in {root}.")
+
+    return binary_dataset(opt, root)
 
 
 def binary_dataset(opt, root):
+    """
+        Loads images using ImageFolder and applies transformations.
+    """
+    # if opt.isTrain:
+    #     crop_func = transforms.RandomCrop(opt.cropSize)
+    # elif opt.no_crop:
+    #     crop_func = transforms.Lambda(lambda img: img)
+    # else:
+    #     crop_func = transforms.CenterCrop(opt.cropSize)
+    #
+    # if opt.isTrain and not opt.no_flip:
+    #     flip_func = transforms.RandomHorizontalFlip()
+    # else:
+    #     flip_func = transforms.Lambda(lambda img: img)
+    # if not opt.isTrain and opt.no_resize:
+    #     rz_func = transforms.Lambda(lambda img: img)
+    # else:
+    #     # rz_func = transforms.Lambda(lambda img: custom_resize(img, opt))
+    #     rz_func = transforms.Resize((opt.loadSize, opt.loadSize))
+    #
+    # dset = datasets.ImageFolder(
+    #         root,
+    #         transforms.Compose([
+    #             rz_func,
+    #             # transforms.Lambda(lambda img: data_augment(img, opt)),
+    #             crop_func,
+    #             flip_func,
+    #             transforms.ToTensor(),
+    #             transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+    #         ]))
+    # return dset
     if opt.isTrain:
         crop_func = transforms.RandomCrop(opt.cropSize)
     elif opt.no_crop:
@@ -28,27 +88,21 @@ def binary_dataset(opt, root):
     else:
         crop_func = transforms.CenterCrop(opt.cropSize)
 
-    if opt.isTrain and not opt.no_flip:
-        flip_func = transforms.RandomHorizontalFlip()
-    else:
-        flip_func = transforms.Lambda(lambda img: img)
-    if not opt.isTrain and opt.no_resize:
-        rz_func = transforms.Lambda(lambda img: img)
-    else:
-        # rz_func = transforms.Lambda(lambda img: custom_resize(img, opt))
-        rz_func = transforms.Resize((opt.loadSize, opt.loadSize))
+    flip_func = transforms.RandomHorizontalFlip() if opt.isTrain and not opt.no_flip else transforms.Lambda(
+        lambda img: img)
+    rz_func = transforms.Resize((opt.loadSize, opt.loadSize)) if not (
+                not opt.isTrain and opt.no_resize) else transforms.Lambda(lambda img: img)
 
-    dset = datasets.ImageFolder(
-            root,
-            transforms.Compose([
-                rz_func,
-                # transforms.Lambda(lambda img: data_augment(img, opt)),
-                crop_func,
-                flip_func,
-                transforms.ToTensor(),
-                transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-            ]))
-    return dset
+    return datasets.ImageFolder(
+        root,
+        transforms.Compose([
+            rz_func,
+            crop_func,
+            flip_func,
+            transforms.ToTensor(),
+            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+        ])
+    )
 
 
 class FileNameDataset(datasets.ImageFolder):

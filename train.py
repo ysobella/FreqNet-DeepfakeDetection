@@ -23,13 +23,29 @@ def seed_torch(seed=100):
     torch.backends.cudnn.deterministic = True
 
 if __name__ == '__main__':
+    # print(torch.cuda.is_available())
+    # print(torch.version.cuda)
+    # print(torch.cuda.device_count())  # Number of GPUs available
+    # print(torch.cuda.get_device_name(0))  # Name of the GPU
     opt = TrainOptions().parse()
     seed_torch(100)  # Ensure reproducibility
 
     # Ensure dataset paths are correctly assigned
-    train_dataroot = os.path.join(opt.dataroot, 'train')  # Training dataset
-    val_dataroot = os.path.join(opt.dataroot, 'val')  # Validation dataset
+    # train_dataroot = os.path.join(opt.dataroot, 'train')  # Training dataset
+    # val_dataroot = os.path.join(opt.dataroot, 'val')  # Validation dataset
+    train_dataroot = opt.dataroot
+    val_dataroot = opt.dataroot
     Logger(os.path.join(opt.checkpoints_dir, opt.name, 'log.log'))
+
+    print(f"Checking dataset paths:")
+    print(f"Training Path: {train_dataroot}")
+    print(f"Validation Path: {val_dataroot}")
+
+    # Debugging: Check if 'real' and 'fake' exist
+    real_path = os.path.join(train_dataroot, 'real')
+    fake_path = os.path.join(train_dataroot, 'fake')
+    print(f"Checking if '{real_path}' exists:", os.path.exists(real_path))
+    print(f"Checking if '{fake_path}' exists:", os.path.exists(fake_path))
 
     print('  '.join(list(sys.argv)))
 
