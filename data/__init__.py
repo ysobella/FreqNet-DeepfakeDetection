@@ -1,7 +1,7 @@
 import torch
 import numpy as np
 from torch.utils.data.sampler import WeightedRandomSampler
-
+from torch.utils.data import ConcatDataset
 from .datasets import dataset_folder
 
 '''
@@ -16,15 +16,31 @@ def get_dataset(opt):
 
 import os
 def get_dataset(opt):
-    classes = os.listdir(opt.dataroot) if len(opt.classes) == 0 else opt.classes
-    if '0_real' not in classes or '1_fake' not in classes:
-        dset_lst = []
-        for cls in classes:
-            root = opt.dataroot + '/' + cls
+    # classes = os.listdir(opt.dataroot) if len(opt.classes) == 0 else opt.classes
+    # if '0_real' not in classes or '1_fake' not in classes:
+    #     dset_lst = []
+    #     for cls in classes:
+    #         root = opt.dataroot + '/' + cls
+    #         dset = dataset_folder(opt, root)
+    #         dset_lst.append(dset)
+    #     return torch.utils.data.ConcatDataset(dset_lst)
+    # return dataset_folder(opt, opt.dataroot)
+    """
+        Loads dataset with 'real' and 'fake' subdirectories.
+        """
+    classes = ['real', 'fake']
+    dset_lst = []
+
+    for cls in classes:
+        root = os.path.join(opt.dataroot, cls)  # Ensure correct path
+        if os.path.exists(root):  # Ensure the directory exists
             dset = dataset_folder(opt, root)
             dset_lst.append(dset)
-        return torch.utils.data.ConcatDataset(dset_lst)
-    return dataset_folder(opt, opt.dataroot)
+
+    if not dset_lst:
+        raise ValueError(f"No valid dataset found in {opt.dataroot}")
+
+    return ConcatDataset(dset_lst)
 
 def get_bal_sampler(dataset):
     targets = []
